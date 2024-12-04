@@ -1,0 +1,383 @@
+Line 6 (wrong key value error):
+question: What is the average, minimum, and maximum age for all French singers?
+filtered_preds.sql: SELECT AVG( singer.age ) , MIN( singer.age ) , MAX( singer.age ) FROM singer WHERE singer.country = 'French'
+filtered_dev.sql: SELECT avg(age) ,  min(age) ,  max(age) FROM singer WHERE country  =  'France'
+--------------------------------------------------
+Line 16 (wrong column in SELECT):
+question: What are the locations and names of all stations with capacity between 5000 and 10000?
+filtered_preds.sql: SELECT stadium.location , stadium.capacity FROM stadium WHERE stadium.capacity BETWEEN 5000 and 10000
+filtered_dev.sql: SELECT LOCATION ,  name FROM stadium WHERE capacity BETWEEN 5000 AND 10000
+--------------------------------------------------
+Line 17 (wrong column in SELECT):
+question: What is the maximum capacity and the average of all stadiums ?
+filtered_preds.sql: SELECT MAX( stadium.capacity ) , AVG( stadium.average ) FROM stadium
+filtered_dev.sql: select max(capacity), average from stadium
+--------------------------------------------------
+Line 18 (wrong column in SELECT):
+question: What is the average and maximum capacities for all stadiums ?
+filtered_preds.sql: SELECT AVG( stadium.average ) , MAX( stadium.capacity ) FROM stadium
+filtered_dev.sql: select avg(capacity) ,  max(capacity) from stadium
+--------------------------------------------------
+Line 33 (duplicant column selection):
+question: Find the maximum weight for each type of pet. List the maximum weight and pet type.
+filtered_preds.sql: SELECT pets.pettype , MAX( pets.weight ) , MAX( pets.weight ) FROM pets GROUP BY pets.pettype
+filtered_dev.sql: SELECT max(weight) ,  petType FROM pets GROUP BY petType
+--------------------------------------------------
+Line 40 (wrong column in SELECT + Unnecessary Table Joins):
+question: Find the average and maximum age for each type of pet.
+filtered_preds.sql: SELECT pets.pettype , AVG( student.age ) , MAX( student.age ) FROM student JOIN has_pet ON student.stuid = has_pet.stuid JOIN pets ON has_pet.petid = pets.petid GROUP BY pets.pettype
+filtered_dev.sql: SELECT avg(pet_age) ,  max(pet_age) ,  pettype FROM pets GROUP BY pettype
+--------------------------------------------------
+Line 41 (wrong column in SELECT + Unnecessary Table Joins):
+question: What is the average and maximum age for each pet type?
+filtered_preds.sql: SELECT pets.pettype , AVG( student.age ) , MAX( student.age ) FROM student JOIN has_pet ON student.stuid = has_pet.stuid JOIN pets ON has_pet.petid = pets.petid GROUP BY pets.pettype
+filtered_dev.sql: SELECT avg(pet_age) ,  max(pet_age) ,  pettype FROM pets GROUP BY pettype
+--------------------------------------------------
+Line 51 (wrong table in SELECT):
+question: What are all the makers and models?
+filtered_preds.sql: SELECT car_makers.maker , model_list.model FROM car_makers JOIN model_list ON car_makers.id = model_list.maker
+filtered_dev.sql: SELECT Maker ,  Model FROM MODEL_LIST;
+--------------------------------------------------
+Line 52 (wrong table in SELECT):
+question: What are the makers and models?
+filtered_preds.sql: SELECT car_makers.maker , model_list.model FROM car_makers JOIN model_list ON car_makers.id = model_list.maker
+filtered_dev.sql: SELECT Maker ,  Model FROM MODEL_LIST;
+--------------------------------------------------
+Line 67 (Miss a DISTINCT keyword):
+question: In which years cars were produced weighing no less than 3000 and no more than 4000 ? 
+question answered correctly: What are the different years in which there were cars produced that weighed less than 4000 and also cars that weighted more than 3000 ?
+filtered_preds.sql: SELECT cars_data.year FROM cars_data WHERE cars_data.weight BETWEEN 3000 and 4000
+filtered_dev.sql: select distinct year from cars_data where weight between 3000 and 4000;
+--------------------------------------------------
+Line 75 (wrong operators):
+question: What is the maximum miles per gallon of the car with 8 cylinders or produced before 1980 ?
+question answered correctly: What is the maximum mpg of the cars that had 8 cylinders or that were produced before 1980 ?
+filtered_preds.sql: SELECT MAX( cars_data.mpg ) FROM cars_data WHERE cars_data.cylinders = '8' AND cars_data.year<1980
+filtered_dev.sql: select max(mpg) from cars_data where cylinders  =  8 or year  <  1980
+--------------------------------------------------
+Line 104 (wrong column in WHERE + Unnecessary Table Joins):
+question: Count the number of flights into ATO.
+question answered correctly: How many flights have destination ATO?
+filtered_preds.sql: SELECT COUNT( * ) FROM flights JOIN airports ON flights.sourceairport = airports.airportcode WHERE airports.airportname = 'ATO'
+filtered_dev.sql: SELECT count(*) FROM FLIGHTS WHERE DestAirport  =  "ATO"
+--------------------------------------------------
+Line 105 (wrong column in WHERE + Unnecessary Table Joins):
+question: What are flight numbers of flights departing from Airport \"APG\"?
+question answered correctly: Give the flight numbers of flights leaving from APG.
+filtered_preds.sql: SELECT flights.flightno FROM flights JOIN airports ON flights.sourceairport = airports.airportcode WHERE airports.airportname = 'APG'
+filtered_dev.sql: SELECT FlightNo FROM FLIGHTS WHERE SourceAirport  =  "APG"
+--------------------------------------------------
+Line 107 (wrong column in WHERE + Unnecessary Table Joins):
+question: What are flight numbers of flights arriving at Airport \"APG\"?
+filtered_preds.sql: SELECT flights.flightno FROM flights JOIN airports ON flights.sourceairport = airports.airportcode WHERE airports.airportname = 'APG'
+filtered_dev.sql: SELECT FlightNo FROM FLIGHTS WHERE DestAirport  =  "APG"
+--------------------------------------------------
+Line 108 (wrong column in WHERE + Unnecessary Table Joins):
+question: Give the flight numbers of flights landing at APG.
+filtered_preds.sql: SELECT flights.flightno FROM flights JOIN airports ON flights.sourceairport = airports.airportcode WHERE airports.airportname = 'APG'
+filtered_dev.sql: SELECT FlightNo FROM FLIGHTS WHERE DestAirport  =  "APG"
+--------------------------------------------------
+Line 168 (operation ORDER BY operation):
+question: Return the lowest version number, along with its corresponding template type code.
+question answered correctly: What the smallest version number and its template type code?
+filtered_preds.sql: SELECT templates.version_number , templates.template_type_code FROM templates ORDER BY templates.version_number ASC LIMIT 1
+filtered_dev.sql: SELECT min(Version_Number) ,  template_type_code FROM Templates
+--------------------------------------------------
+Line 179 (missing ORDER BY operation):
+question: Show all document ids and the number of paragraphs in each document. Order by document id.
+question answered correctly: Return the different document ids along with the number of paragraphs corresponding to each, ordered by id.
+filtered_preds.sql: SELECT paragraphs.document_id , COUNT( * ) FROM paragraphs GROUP BY paragraphs.document_id
+filtered_dev.sql: SELECT document_id ,  count(*) FROM Paragraphs GROUP BY document_id ORDER BY document_id
+--------------------------------------------------
+Line 186 (wrong table in SELECT + Unnecessary Table Joins ):
+question: Give the ids of documents that have between one and two paragraphs.
+question answered correctly: What is the document id with 1 to 2 paragraphs?
+filtered_preds.sql: SELECT documents.document_id FROM documents JOIN paragraphs ON documents.document_id = paragraphs.document_id GROUP BY paragraphs.document_id HAVING COUNT( * ) BETWEEN 1 and 2
+filtered_dev.sql: SELECT document_id FROM Paragraphs GROUP BY document_id HAVING count(*) BETWEEN 1 AND 2
+--------------------------------------------------
+Line 236 (wrong table in SELECT + Unnecessary Table Joins):
+question: What are the names of players who won in both 2013 and 2016?
+question answered correctly: What are the names of players who won in both 2013 and 2016?
+filtered_preds.sql: SELECT players.first_name , players.last_name FROM players JOIN matches ON players.player_id = matches.winner_id WHERE matches.year = 2013 INTERSECT SELECT players.first_name , players.last_name FROM players JOIN matches ON players.player_id = matches.winner_id WHERE matches.year = 2016
+filtered_dev.sql: SELECT winner_name FROM matches WHERE YEAR  =  2013 INTERSECT SELECT winner_name FROM matches WHERE YEAR  =  2016
+--------------------------------------------------
+Line 247 (Unnecessary Table Joins + Redundant JOIN operation):
+question: Find the name and rank points of the winner who won the most times.
+filtered_preds.sql: SELECT matches.winner_name , matches.winner_rank_points FROM matches JOIN rankings ON matches.winner_id = rankings.player_id GROUP BY matches.winner_name ORDER BY COUNT( * ) DESC LIMIT 1
+filtered_dev.sql: SELECT winner_name ,  winner_rank_points FROM matches GROUP BY winner_name ORDER BY count(*) DESC LIMIT 1
+--------------------------------------------------
+Line 248 (Redundant operation in SELECT):
+question: What is the name of the winner who has won the most matches, and how many rank points does this player have?
+filtered_preds.sql: SELECT matches.winner_name , COUNT( * ) , matches.winner_rank_points FROM matches GROUP BY matches.winner_name ORDER BY COUNT( * ) DESC LIMIT 1
+filtered_dev.sql: SELECT winner_name ,  winner_rank_points FROM matches GROUP BY winner_name ORDER BY count(*) DESC LIMIT 1
+--------------------------------------------------
+Line 263 (Redundant operation in JOIN + wrong column in ORDER BY + Miss a DISTINCT keyword ):
+question: Find the name and rank of the 3 youngest winners across all matches.
+filtered_preds.sql: SELECT matches.winner_name , matches.winner_rank FROM matches JOIN players ON matches.winner_id = players.player_id ORDER BY players.birth_date ASC LIMIT 3
+filtered_dev.sql: SELECT DISTINCT winner_name ,  winner_rank FROM matches ORDER BY winner_age LIMIT 3
+--------------------------------------------------
+Line 264 (Redundant operation in JOIN + wrong column in ORDER BY + Miss a DISTINCT keyword):
+question: What are the names and ranks of the three youngest winners across all matches?
+filtered_preds.sql: SELECT matches.winner_name , matches.winner_rank FROM players JOIN matches ON players.player_id = matches.winner_id ORDER BY players.birth_date ASC LIMIT 3
+filtered_dev.sql: SELECT DISTINCT winner_name ,  winner_rank FROM matches ORDER BY winner_age LIMIT 3
+--------------------------------------------------
+Line 266 (Redundant operation in JOIN + miss a DISTINCT keyword):
+question: Find the number of left handed winners who participated in the WTA Championships.
+question asnwered correctly: How many different winners both participated in the WTA Championships and were left handed?
+filtered_preds.sql: SELECT COUNT( * ) FROM players JOIN matches ON players.player_id = matches.winner_id WHERE players.hand = 'left' AND matches.tourney_name = 'WTA Championships'
+filtered_dev.sql: SELECT count(DISTINCT winner_name) FROM matches WHERE tourney_name  =  'WTA Championships' AND winner_hand  =  'L'
+--------------------------------------------------
+Line 269 (wrong column in WHERE + select wrong table):
+question: How many ships ended up being 'Captured'
+filtered_preds.sql: SELECT COUNT( * ) FROM battle JOIN ship ON battle.id = ship.lost_in_battle WHERE battle.result = 'Captured'
+filtered_dev.sql: SELECT count(*) FROM ship WHERE disposition_of_ship  =  'Captured'
+--------------------------------------------------
+Line 277 (unnecessary table joining + wrong column in WHERE ):
+question: What are the notes of the death events which has substring 'East'
+filtered_preds.sql: SELECT death.note FROM death JOIN ship ON death.caused_by_ship_id = ship.id WHERE ship.location LIKE '%East%'
+filtered_dev.sql: SELECT note FROM death WHERE note LIKE '%East%'
+--------------------------------------------------
+Line 289 (Miss a DISTINCT keyword):
+question: How many different degrees are offered?
+question answered correctly: How many different degree names are offered?
+filtered_preds.sql: SELECT COUNT( * ) FROM degree_programs
+filtered_dev.sql: SELECT count(DISTINCT degree_summary_name) FROM Degree_Programs
+--------------------------------------------------
+Line 296 (wrong column in SELECT):
+question: What is the phone number of the man with the first name Timmothy and the last name Ward?
+question answered correctly: What is the mobile phone number of the student named Timmothy Ward ?
+filtered_preds.sql: SELECT students.ssn FROM students WHERE students.first_name = 'Timmothy' AND students.last_name = 'Ward'
+filtered_dev.sql: SELECT cell_mobile_number FROM Students WHERE first_name  =  'Timmothy' AND last_name  =  'Ward'
+--------------------------------------------------
+Line 300 (wrong table in SELECT + wrong column in ORDER BY):
+question: Who is the earliest graduate of the school? List the first name, middle name and last name.
+filtered_preds.sql: SELECT students.first_name , students.middle_name , students.last_name FROM degree_programs JOIN student_enrolment ON degree_programs.degree_program_id = student_enrolment.degree_program_id JOIN students ON student_enrolment.student_id = students.student_id ORDER BY students.date_first_registered ASC LIMIT 1
+filtered_dev.sql: SELECT first_name ,  middle_name ,  last_name FROM Students ORDER BY date_left ASC LIMIT 1
+--------------------------------------------------
+Line 301 (wrong table in SELECT + wrong column in ORDER BY):
+question: What is the first, middle, and last name of the earliest school graduate?
+filtered_preds.sql: SELECT students.first_name , students.middle_name , students.last_name FROM students JOIN student_enrolment ON students.student_id = student_enrolment.student_id ORDER BY students.date_first_registered ASC LIMIT 1
+filtered_dev.sql: SELECT first_name ,  middle_name ,  last_name FROM Students ORDER BY date_left ASC LIMIT 1
+--------------------------------------------------
+Line 302 (Redundant column in SELECT + wrong column in WHERE):
+question: Whose permanent address is different from his or her current address? List his or her first name.
+question answered correctly: What is the first name of the student whose permanent address is different from his or her current one?
+filtered_preds.sql: SELECT students.first_name , students.permanent_address_id FROM students WHERE students.permanent_address_id IN (SELECT MAX( students.ssn ) FROM students)
+filtered_dev.sql: SELECT first_name FROM Students WHERE current_address_id != permanent_address_id
+--------------------------------------------------
+Line 304 (wrong column in SELECT):
+question: On average, when were the transcripts printed?
+question answered correctly: What is the average transcript date?
+filtered_preds.sql: SELECT AVG( transcripts.other_details ) FROM transcripts
+filtered_dev.sql: SELECT avg(transcript_date) FROM Transcripts
+--------------------------------------------------
+Line 306 (column missing):
+question: When is the first transcript released? List the date and details.
+filtered_preds.sql: SELECT transcripts.transcript_date FROM transcripts ORDER BY transcripts.transcript_date ASC LIMIT 1
+filtered_dev.sql: SELECT transcript_date ,  other_details FROM Transcripts ORDER BY transcript_date ASC LIMIT 1
+--------------------------------------------------
+Line 307 (column missing):
+question: What is the earliest date of a transcript release, and what details can you tell me?
+filtered_preds.sql: SELECT transcripts.transcript_date FROM transcripts ORDER BY transcripts.transcript_date ASC LIMIT 1
+filtered_dev.sql: SELECT transcript_date ,  other_details FROM Transcripts ORDER BY transcript_date ASC LIMIT 1
+--------------------------------------------------
+Line 308 (wrong table in SELECT):
+question: How many transcripts are released?
+filtered_preds.sql: SELECT COUNT( * ) FROM courses
+filtered_dev.sql: SELECT count(*) FROM Transcripts
+--------------------------------------------------
+Line 309 (wrong table in SELECT):
+question: How many transcripts are listed?
+filtered_preds.sql: SELECT COUNT( * ) FROM courses
+filtered_dev.sql: SELECT count(*) FROM Transcripts
+--------------------------------------------------
+Line 312 (wrong table in SELECT):
+question: How many times at most can a course enrollment result show in different transcripts? Also show the course enrollment id.
+filtered_preds.sql: SELECT student_enrolment_courses.course_id , COUNT( * ) FROM student_enrolment_courses GROUP BY student_enrolment_courses.course_id ORDER BY COUNT( * ) DESC LIMIT 1
+filtered_dev.sql: SELECT count(*) ,  student_course_id FROM Transcript_Contents GROUP BY student_course_id ORDER BY count(*) DESC LIMIT 1
+--------------------------------------------------
+Line 313 (wrong table in SELECT):
+question: What is the maximum number of times that a course shows up in different transcripts and what is that course's enrollment id?
+filtered_preds.sql: SELECT student_enrolment_courses.student_course_id , COUNT( * ) FROM courses JOIN transcript_contents ON courses.course_id = transcript_contents.student_course_id GROUP BY student_enrolment_courses.course_id ORDER BY COUNT( * ) DESC LIMIT 1
+filtered_dev.sql: SELECT count(*) ,  student_course_id FROM Transcript_Contents GROUP BY student_course_id ORDER BY count(*) DESC LIMIT 1
+--------------------------------------------------
+Line 315 (miss aggregation function):
+question: What are the different addresses that have students living there?
+question answered correctly: How many different addresses do the students currently live?
+filtered_preds.sql: SELECT DISTINCT students.current_address_id FROM students
+filtered_dev.sql: SELECT count(DISTINCT current_address_id) FROM Students
+--------------------------------------------------
+Line 316 (wrong column in SELECT + wrong sorting direction):
+question: List all the student details in reversed lexicographical order.
+filtered_preds.sql: SELECT students.ssn FROM students ORDER BY students.other_student_details ASC
+filtered_dev.sql: SELECT other_student_details FROM Students ORDER BY other_student_details DESC
+--------------------------------------------------
+Line 317 (wrong table in SELECT + wrong sorting direction):
+question: What other details can you tell me about students in reverse alphabetical order?
+filtered_preds.sql: SELECT student_enrolment.other_details FROM student_enrolment JOIN students ON student_enrolment.student_id = students.student_id ORDER BY student_enrolment.other_details ASC
+filtered_dev.sql: SELECT other_student_details FROM Students ORDER BY other_student_details DESC
+--------------------------------------------------
+Line 318 (wrong column in SELECT):
+question: Describe the section h.
+question answered correctly: What is the description for the section named h?
+filtered_preds.sql: SELECT sections.section_name FROM sections WHERE sections.section_name = 'h'
+filtered_dev.sql: SELECT section_description FROM Sections WHERE section_name  =  'h'
+--------------------------------------------------
+Line 322 (wrong column in SELECT):
+question: List all cartoon directed by \"Ben Jones\"."
+question answered correctly: What are the names of all cartoons directed by Ben Jones?
+filtered_preds.sql: SELECT cartoon.directed_by FROM cartoon WHERE cartoon.directed_by = 'Ben Jones'
+filtered_dev.sql: SELECT Title FROM Cartoon WHERE Directed_by = "Ben Jones";
+--------------------------------------------------
+Line 332 (miss aggregation function + miss a DISTINCT keyword):
+question: List the number of different series names and contents in the TV Channel table.
+filtered_preds.sql: SELECT COUNT( DISTINCT tv_channel.series_name ) , tv_channel.content FROM tv_channel
+filtered_dev.sql: SELECT count(DISTINCT series_name) ,  count(DISTINCT content) FROM TV_Channel;
+--------------------------------------------------
+Line 333 (miss aggregation function + miss a DISTINCT keyword):
+question: How many different series and contents are listed in the TV Channel table?
+filtered_preds.sql: SELECT COUNT( DISTINCT tv_channel.series_name ) , tv_channel.content FROM tv_channel
+filtered_dev.sql: SELECT count(DISTINCT series_name) ,  count(DISTINCT content) FROM TV_Channel;
+--------------------------------------------------
+Line 413 (wrong column in SELECT):
+question: What is the total population and maximum GNP in Asia?
+filtered_preds.sql: SELECT SUM( country.population ) , MAX( country.gnp ) FROM country WHERE country.region = 'Asia'
+filtered_dev.sql: SELECT sum(Population) ,  max(GNP) FROM country WHERE Continent  =  "Asia"
+--------------------------------------------------
+Line 414 (miss aggregation function + wrong column in WHERE):
+question: How many people live in Asia, and what is the largest GNP among them?
+filtered_preds.sql: SELECT country.gnp FROM country WHERE country.region = 'Asia' ORDER BY country.gnp DESC LIMIT 1
+filtered_dev.sql: SELECT sum(Population) ,  max(GNP) FROM country WHERE Continent  =  "Asia"
+--------------------------------------------------
+Line 415 (wrong column in WHERE):
+question: What is the average life expectancy in African countries that are republics?
+filtered_preds.sql: SELECT AVG( country.lifeexpectancy ) FROM country WHERE country.region = 'African' AND country.governmentform = 'republic'
+filtered_dev.sql: SELECT avg(LifeExpectancy) FROM country WHERE Continent  =  "Africa" AND GovernmentForm  =  "Republic"
+--------------------------------------------------
+Line 416 (wrong key value error):
+question: Give the average life expectancy for countries in Africa which are republics?
+filtered_preds.sql: SELECT AVG( country.lifeexpectancy ) FROM country WHERE country.continent = 'Africa' AND country.governmentform = 'Africa'
+filtered_dev.sql: SELECT avg(LifeExpectancy) FROM country WHERE Continent  =  "Africa" AND GovernmentForm  =  "Republic"
+--------------------------------------------------
+Line 417 (wrong column in WHERE):
+question: What is the total surface area of the continents Asia and Europe?
+filtered_preds.sql: SELECT SUM( country.surfacearea ) FROM country WHERE country.continent = 'Asia' OR country.region = 'Europe'
+filtered_dev.sql: SELECT sum(SurfaceArea) FROM country WHERE Continent  =  "Asia" OR Continent  =  "Europe"
+--------------------------------------------------
+Line 418 (wrong column in WHERE):
+question: Give the total surface area covered by countries in Asia or Europe.
+filtered_preds.sql: SELECT SUM( country.surfacearea ) FROM country WHERE country.region = 'Asia' OR country.region = 'Europe'
+filtered_dev.sql: SELECT sum(SurfaceArea) FROM country WHERE Continent  =  "Asia" OR Continent  =  "Europe"
+--------------------------------------------------
+Line 421 (wrong Key Value Error --> if case sensitive):
+question: What is the average GNP and total population in all nations whose government is US territory?
+filtered_preds.sql: SELECT AVG( country.gnp ) , SUM( country.population ) FROM country WHERE country.governmentform = 'US territory'
+filtered_dev.sql: SELECT avg(GNP) ,  sum(population) FROM country WHERE GovernmentForm  =  "US Territory"
+--------------------------------------------------
+Line 422 (wrong column in WHERE):
+question: Give the mean GNP and total population of nations which are considered US territory.
+filtered_preds.sql: SELECT AVG( country.gnp ) , SUM( country.population ) FROM country WHERE country.region = 'US territory'
+filtered_dev.sql: SELECT avg(GNP) ,  sum(population) FROM country WHERE GovernmentForm  =  "US Territory"
+--------------------------------------------------
+Line 425 (wrong column in WHERE):
+question: How many type of governments are in Africa?
+filtered_preds.sql: SELECT COUNT( DISTINCT country.governmentform ) FROM country WHERE country.region = 'Africa'
+filtered_dev.sql: SELECT count(DISTINCT GovernmentForm) FROM country WHERE Continent  =  "Africa"
+--------------------------------------------------
+Line 426 (wrong column in WHERE):
+question: How many different forms of governments are there in Africa?
+filtered_preds.sql: SELECT COUNT( DISTINCT country.governmentform ) FROM country WHERE country.region = 'Africa'
+filtered_dev.sql: SELECT count(DISTINCT GovernmentForm) FROM country WHERE Continent  =  "Africa"
+--------------------------------------------------
+Line 435 (wrong table in SELECT):
+question: What are the country codes for countries that do not speak English?
+filtered_preds.sql: SELECT country.code FROM country EXCEPT SELECT countrylanguage.countrycode FROM countrylanguage WHERE countrylanguage.language = 'English'
+filtered_dev.sql: SELECT CountryCode FROM countrylanguage EXCEPT SELECT CountryCode FROM countrylanguage WHERE LANGUAGE  =  "English"
+--------------------------------------------------
+Line 436 (wrong table in SELECT):
+question: Return the country codes for countries that do not speak English.
+filtered_preds.sql: SELECT country.code FROM country EXCEPT SELECT countrylanguage.countrycode FROM countrylanguage WHERE countrylanguage.language = 'English'
+filtered_dev.sql: SELECT CountryCode FROM countrylanguage EXCEPT SELECT CountryCode FROM countrylanguage WHERE LANGUAGE  =  "English"
+--------------------------------------------------
+Line 447 (miss aggregation function + ):
+question: Find the average life expectancy and total population for each continent where the average life expectancy is shorter than 72?
+filtered_preds.sql: SELECT country.continent , SUM( country.population ) FROM country WHERE country.lifeexpectancy<72 GROUP BY country.continent
+filtered_dev.sql: SELECT sum(Population) ,  avg(LifeExpectancy) ,  Continent FROM country GROUP BY Continent HAVING avg(LifeExpectancy)  <  72
+--------------------------------------------------
+Line 448 (miss aggregation function + ):
+question: What are the different continents and the total popuation and average life expectancy corresponding to each, for continents that have an average life expectancy less than 72?
+filtered_preds.sql: SELECT country.continent , SUM( country.population ) FROM country WHERE country.lifeexpectancy<72 GROUP BY country.continent
+filtered_dev.sql: SELECT sum(Population) ,  avg(LifeExpectancy) ,  Continent FROM country GROUP BY Continent HAVING avg(LifeExpectancy)  <  72
+--------------------------------------------------
+Line 459 (difference in filter logic):
+question: What is the total population and average area of countries in the continent of North America whose area is bigger than 3000 ?
+filtered_preds.sql: SELECT SUM( country.population ) , AVG( country.surfacearea ) FROM country WHERE country.continent = 'North America' HAVING AVG( country.surfacearea ) > 3000
+filtered_dev.sql: select sum(population) ,  avg(surfacearea) from country where continent  =  "north america" and surfacearea  >  3000
+--------------------------------------------------
+Line 460 (Redundant aggregation function):
+question: Give the total population and average surface area corresponding to countries in North America that have a surface area greater than 3000 .
+filtered_preds.sql: SELECT SUM( country.population ) , AVG( country.surfacearea ) FROM country WHERE country.region = 'North America' AND country.surfacearea > 3000
+filtered_dev.sql: select sum(population) ,  avg(surfacearea) from country where continent  =  "north america" and surfacearea  >  3000
+--------------------------------------------------
+Line 465 (miss a column in SELECT + miss aggregation function + wrong column in ORDER BY):
+question: What is the language spoken by the largest percentage of people in each country?
+filtered_preds.sql: SELECT countrylanguage.language FROM countrylanguage ORDER BY countrylanguage.percentage DESC LIMIT 1
+filtered_dev.sql: SELECT LANGUAGE ,  CountryCode ,  max(Percentage) FROM countrylanguage GROUP BY CountryCode
+--------------------------------------------------
+Line 466 (miss a column in SELECT):
+question: What are the country codes of the different countries, and what are the languages spoken by the greatest percentage of people for each?
+filtered_preds.sql: SELECT countrylanguage.countrycode , MAX( countrylanguage.percentage ) FROM countrylanguage GROUP BY countrylanguage.countrycode
+filtered_dev.sql: SELECT LANGUAGE ,  CountryCode ,  max(Percentage) FROM countrylanguage GROUP BY CountryCode
+--------------------------------------------------
+Line 467 (Miss aggregation function):
+question: What is the total number of countries where Spanish is spoken by the largest percentage of people?
+filtered_preds.sql: SELECT COUNT( * ) FROM countrylanguage WHERE countrylanguage.language = 'Spanish' ORDER BY countrylanguage.percentage DESC LIMIT 1
+filtered_dev.sql: SELECT count(*) ,   max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  "Spanish" GROUP BY CountryCode
+--------------------------------------------------
+Line 468 (Miss aggregation function + miss clause GROUP BY ):
+question: Count the number of countries for which Spanish is the predominantly spoken language.
+filtered_preds.sql: SELECT COUNT( * ) FROM countrylanguage WHERE countrylanguage.language = 'Spanish'
+filtered_dev.sql: SELECT count(*) ,   max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  "Spanish" GROUP BY CountryCode
+--------------------------------------------------
+Line 469: (Miss aggregation function)
+question: What are the codes of countries where Spanish is spoken by the largest percentage of people?
+filtered_preds.sql: SELECT countrylanguage.countrycode FROM countrylanguage WHERE countrylanguage.language = 'Spanish' ORDER BY countrylanguage.percentage DESC LIMIT 1
+filtered_dev.sql: SELECT CountryCode ,  max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  "Spanish" GROUP BY CountryCode
+--------------------------------------------------
+Line 470:
+question: Return the codes of countries for which Spanish is the predominantly spoken language.
+filtered_preds.sql: SELECT countrylanguage.countrycode FROM countrylanguage WHERE countrylanguage.percentage > (SELECT AVG( countrylanguage.percentage ) FROM countrylanguage WHERE countrylanguage.language = 'Spanish')
+filtered_dev.sql: SELECT CountryCode ,  max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  "Spanish" GROUP BY CountryCode
+--------------------------------------------------
+Line 547 (wrong aggregation function):
+question: How much does the most expensive charge type costs?
+filtered_preds.sql: SELECT SUM( charges.charge_amount ) FROM charges ORDER BY charges.charge_type DESC LIMIT 1
+filtered_dev.sql: SELECT max(charge_amount) FROM Charges
+--------------------------------------------------
+Line 551 (wrong column in SELECT):
+question: What are all the possible breed type and size type combinations?
+question answered correctly: Find the distinct breed type and size type combinations for dogs."
+filtered_preds.sql: SELECT DISTINCT breeds.breed_name , sizes.size_description FROM breeds JOIN dogs ON breeds.breed_code = dogs.breed_code JOIN sizes ON dogs.size_code = sizes.size_code
+filtered_dev.sql: SELECT DISTINCT breed_code ,  size_code FROM dogs
+--------------------------------------------------
+(wrong sorting direction)
+question: List the section_name in reversed lexicographical order.
+filtered_preds.sql: SELECT sections.section_name FROM sections ORDER BY sections.section_name ASC	student_transcripts_tracking
+filtered_dev.sql: SELECT section_name FROM Sections ORDER BY section_name DESC	student_transcripts_tracking
+--------------------------------------------------
+(wrong sorting direction)
+question: What are the names of the sections in reverse alphabetical order?
+filtere d_preds.sql: SELECT sections.section_name FROM sections ORDER BY sections.section_name ASC	student_transcripts_tracking
+filtered_dev.sql: SELECT section_name FROM Sections ORDER BY section_name DESC	student_transcripts_tracking
+--------------------------------------------------
+Wrong column in ___ 31 instances 
+Redundant column ____  1 instance
+Wrong table in ____ 14 instances
+Miss a DISTINCT keyword 7 instances
+Wrong operators 1 instance
+Redundant operation in ___  4 instances
+Column missing  2 instances
+Miss aggregation function 10 instances 
+Wrong sorting direction 4 instances
+Wrong Key Value Error 3 instances
+Miss a column in ___ 2 instances
