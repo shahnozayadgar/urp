@@ -1,0 +1,101 @@
+[
+  {
+    "example_number": 1,
+    "table": "pets_1",
+    "error_type": "Duplicate Column Selection: max(weight)",
+    "original_question": "Find the maximum weight for each type of pet. List the maximum weight and pet type.",
+    "erroneous_query": "SELECT pettype , MAX( weight ) , MAX( weight ) FROM pets GROUP BY pettype",
+    "generated_query": "SELECT pettype, MAX(weight), MAX(weight) AS max_weight FROM pets GROUP BY pettype",
+    "generated_question": "What is the maximum weight of each pet type in the database?"
+  },
+  {
+    "example_number": 3,
+    "table": "cre_Doc_Template_Mgt",
+    "error_type": "Missing Aggregation Function in Prediction: min(version_number)",
+    "original_question": "Return the lowest version number, along with its corresponding template type code.",
+    "erroneous_query": "SELECT version_number , template_type_code FROM templates ORDER BY version_number ASC LIMIT 1",
+    "generated_query": "SELECT version_number , template_type_code FROM templates ORDER BY version_number ASC LIMIT 1",
+    "generated_question": "What would be the output of the query if the 'LIMIT 1' clause was removed?"
+  },
+  {
+    "example_number": 3,
+    "table": "cre_Doc_Template_Mgt",
+    "error_type": "Redundant ORDER BY Clause",
+    "original_question": "Return the lowest version number, along with its corresponding template type code.",
+    "erroneous_query": "SELECT version_number , template_type_code FROM templates ORDER BY version_number ASC LIMIT 1",
+    "generated_query": "SELECT document_name, document_description FROM documents ORDER BY document_name DESC LIMIT 1",
+    "generated_question": "What is the document name and description of the document with the highest name when ordered in descending order?"
+  },
+  {
+    "example_number": 4,
+    "table": "cre_Doc_Template_Mgt",
+    "error_type": "Missing LIKE Clause",
+    "original_question": "What are the details for the paragraph that includes the text 'Korea '",
+    "erroneous_query": "SELECT other_details FROM paragraphs WHERE paragraph_text = 'Korea'",
+    "generated_query": "SELECT other_details FROM paragraphs WHERE paragraph_text != 'Japan'",
+    "generated_question": "What are the other details for paragraphs that do not contain the text 'Japan'?"
+  },
+  {
+    "example_number": 5,
+    "table": "cre_Doc_Template_Mgt",
+    "error_type": "Missing ORDER BY Clause",
+    "original_question": "Show all document ids and the number of paragraphs in each document. Order by document id.",
+    "erroneous_query": "SELECT document_id , COUNT( * ) FROM paragraphs GROUP BY document_id",
+    "generated_query": "SELECT template_id, COUNT(*) FROM templates GROUP BY template_id",
+    "generated_question": "Can you identify the number of templates in the database based on their template_id without specifying the order in which they should be displayed?"
+  },
+  {
+    "example_number": 6,
+    "table": "cre_Doc_Template_Mgt",
+    "error_type": "Redundant LIKE Clause",
+    "original_question": "Show the document id with paragraph text 'Brazil' and 'Ireland'.",
+    "erroneous_query": "SELECT document_id FROM paragraphs WHERE paragraph_text LIKE '%Brazil%' INTERSECT SELECT document_id FROM paragraphs WHERE paragraph_text LIKE '%Ireland%'",
+    "generated_query": "SELECT document_id FROM paragraphs WHERE paragraph_text LIKE '%Brazil%' INTERSECT SELECT document_id FROM paragraphs WHERE paragraph_text LIKE '%Brazil%'",
+    "generated_question": "What is the result of intersecting document IDs where the paragraph text contains 'Brazil' and 'Brazil'?"
+  },
+  {
+    "example_number": 7,
+    "table": "battle_death",
+    "error_type": "Duplicate Column Selection: result",
+    "original_question": "List the name, date and result of each battle.",
+    "erroneous_query": "SELECT name , date , result FROM battle",
+    "generated_query": "SELECT name , date , result, result FROM battle",
+    "generated_question": "What is the significance of the 'result' column in the battle table? How does it differ from the other columns selected in this query?"
+  },
+  {
+    "example_number": 8,
+    "table": "battle_death",
+    "error_type": "Redundant DISTINCT Keyword",
+    "original_question": "What are the distinct battle names which are between bulgarian commander 'Kaloyan' and latin commander 'Baldwin I'?",
+    "erroneous_query": "SELECT DISTINCT name FROM battle WHERE bulgarian_commander = 'Kaloyan' AND latin_commander = 'Baldwin I'",
+    "generated_query": "SELECT DISTINCT name FROM battle WHERE bulgarian_commander = 'Kaloyan' AND latin_commander = 'Baldwin I'",
+    "generated_question": "What are the names of battles where Kaloyan was the Bulgarian commander and Baldwin I was the Latin commander?"
+  },
+  {
+    "example_number": 11,
+    "table": "dog_kennels",
+    "error_type": "Wrong Key Value",
+    "original_question": "List the dog name, age and weight of the dogs who have been abandoned? 1 stands for yes, and 0 stands for no.",
+    "erroneous_query": "SELECT name , age , weight FROM dogs WHERE abandoned_yn = 'yes' OR abandoned_yn = 'no'",
+    "generated_query": "SELECT name , age , weight FROM dogs WHERE abandoned = 'yes' OR abandoned = 'no'",
+    "generated_question": "What information is being retrieved from the 'dogs' table based on the value of the 'abandoned' column being either 'yes' or 'no'?"
+  },
+  {
+    "example_number": 12,
+    "table": "dog_kennels",
+    "error_type": "Aggregation Function Mismatch for Column 'charge_amount': Expected 'max', Found 'sum'",
+    "original_question": "How much does the most expensive charge type costs?",
+    "erroneous_query": "SELECT SUM( charge_amount ) FROM charges ORDER BY charge_type DESC LIMIT 1",
+    "generated_query": "SELECT MAX( charge_amount ) FROM charges ORDER BY charge_type DESC LIMIT 1",
+    "generated_question": "What is the maximum charge amount for a specific charge type, when sorted in descending order?"
+  },
+  {
+    "example_number": 12,
+    "table": "dog_kennels",
+    "error_type": "Redundant ORDER BY Clause",
+    "original_question": "How much does the most expensive charge type costs?",
+    "erroneous_query": "SELECT SUM( charge_amount ) FROM charges ORDER BY charge_type DESC LIMIT 1",
+    "generated_query": "SELECT MAX( size_id ) FROM sizes ORDER BY size_description ASC LIMIT 1",
+    "generated_question": "What is the maximum size_id from the sizes table when ordered by size_description in ascending order?"
+  }
+]

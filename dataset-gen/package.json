@@ -1,0 +1,20 @@
+{
+  "name": "smbop",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "dataset_gen.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5",
+    "node-sql-parser": "^5.3.4",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
