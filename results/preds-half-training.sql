@@ -222,7 +222,7 @@ SELECT customers.first_name , customers.last_name FROM customers JOIN invoices O
 SELECT customers.first_name , customers.last_name , COUNT( * ) FROM customers WHERE customers.id = 1 GROUP BY customers.first_name , customers.last_name ORDER BY COUNT( * ) DESC LIMIT 10	store_1
 SELECT customers.first_name , customers.last_name , COUNT( * ) FROM customers	store_1
 SELECT customers.first_name , customers.last_name , customers.last_name FROM customers JOIN invoices ON customers.id = invoices.customer_id GROUP BY 1 ORDER BY COUNT( * ) ASC LIMIT 10	store_1
-SELECT customers.first_name , customers.last_name , customers.last_name FROM customers JOIN tracks ON customers.id = tracks.name ORDER BY 10 customers' first and last names with the highest DESC LIMIT 1	store_1
+SELECT customers.first_name , customers.last_name , customers.last_name FROM customers JOIN tracks ON customers.id = tracks.name ORDER BY 10 customers first and last names with the highest DESC LIMIT 1	store_1
 SELECT genres.name , COUNT( * ) FROM tracks JOIN genres ON tracks.genre_id = genres.id GROUP BY tracks.genre_id ORDER BY COUNT( * ) DESC LIMIT 5	store_1
 SELECT genres.name , tracks.genre_id FROM tracks JOIN genres ON tracks.genre_id = genres.id GROUP BY tracks.genre_id ORDER BY COUNT( * ) DESC LIMIT 5	store_1
 SELECT albums.title FROM albums	store_1
@@ -2516,7 +2516,7 @@ SELECT SUM( college.enr ) , college.state FROM college JOIN tryout ON college.cn
 SELECT college.cname FROM college WHERE college.state = 'LA' OR college.enr<13000	soccer_2
 SELECT college.cname FROM college WHERE college.state = '15,000 students and of colleges in AZ' UNION SELECT college.cname FROM college WHERE college.state = 'LA' AND college.enr<13,000	soccer_2
 SELECT college.cname FROM college JOIN tryout ON college.enr = tryout.cname WHERE tryout.ppos = 'goalie' INTERSECT SELECT college.cname FROM college JOIN tryout ON college.enr = tryout.cname WHERE tryout.ppos = 'mid'	soccer_2
-SELECT tryout.cname FROM tryout WHERE tryout.ppos = 'goal' INTERSECT SELECT tryout.cname FROM tryout WHERE tryout.ppos = 'mid'-field'	soccer_2
+SELECT tryout.cname FROM tryout WHERE tryout.ppos = 'goal' INTERSECT SELECT tryout.cname FROM tryout WHERE tryout.ppos = 'mid'-field	soccer_2
 SELECT college.state FROM college JOIN tryout ON college.cname = tryout.cname WHERE tryout.ppos = 'goalie' INTERSECT SELECT college.state FROM college JOIN tryout ON college.cname = tryout.cname WHERE tryout.ppos = 'mid'	soccer_2
 SELECT college.state FROM college JOIN tryout ON college.cname = tryout.cname WHERE tryout.ppos = 'goalie' INTERSECT SELECT college.state FROM college JOIN tryout ON college.cname = tryout.cname WHERE tryout.ppos = 'mid-field'	soccer_2
 SELECT COUNT( * ) FROM tryout WHERE tryout.ppos = 'mid'	soccer_2
