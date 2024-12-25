@@ -1,31 +1,24 @@
+// dataset_gen.js
+
 import dotenv from 'dotenv';
 dotenv.config();
 import axios from 'axios';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import pkg from 'node-sql-parser';
-const { Parser } = pkg;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// OpenAI API URL
 const url = 'https://api.openai.com/v1/chat/completions';
 
-//function that reads schema.sql file for a given tableID
-//using re CREATE TABLE statement
-//parsing to extract column names and data types
-//returning an erray of columns with their names and datatypes
-// Function to parse the schema.sql file for a given tableID
 async function parseSchema(tableID) {
   try {
     const schemaPath = path.join(__dirname, 'database', tableID, 'schema.sql');
     const schemaContent = await fs.readFile(schemaPath, 'utf-8');
 
-    // Updated regex patterns to handle quoted and unquoted identifiers
-    const createTableRegex = /CREATE\s+TABLE\s+(?:"|`)?([^"`\s]+)(?:"|`)?\s*\(([\s\S]*?)\);/gim;
-    const columnRegex = /^\s*(?:"|`)?([^"`\s]+)(?:"|`)?\s+((?:CHAR|VARCHAR|INTEGER|DATETIME|TEXT|INT)\(?[^,\)]*\)?)/gim;
+    // Regex to match CREATE TABLE statements, including IF NOT EXISTS
+    const createTableRegex = /CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?\s+(?:"|`)?([^"`\s]+)(?:"|`)?\s*\(([\s\S]*?)\);/gim;
 
     const allColumns = [];
     let tableMatch;
@@ -37,12 +30,13 @@ async function parseSchema(tableID) {
       // Split column section into lines
       const columnLines = columnSection.split('\n');
       
-      // Process each line that looks like a column definition
       for (const line of columnLines) {
-        // Skip lines that are for constraints (PRIMARY KEY, FOREIGN KEY)
         if (line.trim().toUpperCase().includes('KEY')) continue;
-        
-        const columnMatch = line.match(/\s*(?:"|`)?([^"`\s]+)(?:"|`)?\s+((?:CHAR|VARCHAR|INTEGER|DATETIME|TEXT|INT)\(?[^,\)]*\)?)/i);
+        if (line.trim().toUpperCase().startsWith('CONSTRAINT')) continue;
+        if (line.trim().startsWith('--')) continue; // Skip comments
+
+        // Match column definitions
+        const columnMatch = line.match(/\s*(?:"|`)?([^"`\s]+)(?:"|`)?\s+((?:CHAR|VARCHAR|INTEGER|DATETIME|TEXT|INT|DECIMAL|FLOAT|DOUBLE)[^,$]*\)?)/i);
         if (columnMatch) {
           // Clean up the data type
           let dataType = columnMatch[2].toLowerCase();
@@ -78,112 +72,7 @@ async function parseSchema(tableID) {
   }
 }
 
-//main function for dataset generation
-const generateDataset = async (tableID, errorType, erroneousQuery, originalQuestion, schema) => {
-  try {
-    //checking if schema is valid
-    if (!Array.isArray(schema) || schema.length === 0) {
-      console.error(`Invalid schema provided for table ${tableID}`);
-      return null;
-    }
-
-    //grouping columns by table 
-    const tableColumns = schema.reduce((acc, col) => {
-      //cleaning the data type by removing 'not null'
-      const cleanDataType = col.dataType.split(' ')[0].toLowerCase();
-
-      if (!acc[col.tableName]) {
-        acc[col.tableName] = [];
-      }
-      acc[col.tableName].push(`${col.columnName} (${col.dataType})`);
-      return acc;
-    }, {});
-
-    //formatting schema information for each table
-    const schemaFormatted = Object.entries(tableColumns)
-    .map(([tableName, columns]) => `${tableName}: ${columns.join(', ')}`)
-    .join('\n');
-
-    const prompt = `
-      You are an expert SQL developer.
-
-       Given the following:
-      - Database Schema:
-      ${schemaFormatted}
-      - Error Type: "${errorType}"
-      - Erroneous SQL Query:
-      \`\`\`sql
-      ${erroneousQuery}
-      \`\`\`
-
-      **Tasks**:
-      1. Generate a new SQL query that is similar to the given erroneous query but contains a similar "${errorType}". Do not correct the error.
-      2. Write a question that relates to this new erroneous query.
-
-      Provide your response in the following JSON format:
-
-      \`\`\`json
-      {
-        "generated_query": "Your generated SQL query here",
-        "generated_question": "Your generated question here"
-      }
-      \`\`\`
-    `;
-
-    const response = await axios.post(
-      url,
-      {
-        model: 'gpt-3.5-turbo',
-        max_tokens: 300,
-        temperature: 0.7,
-        messages: [
-          {
-            role: 'user',
-            content: prompt.trim(),
-          },
-        ],
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-      }
-    );
-
-    const content = response.data.choices[0].message.content.trim();
-
-    try {
-      // Find the JSON object in the response
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        throw new Error('No JSON object found in response');
-      }
-      
-      const result = JSON.parse(jsonMatch[0]);
-
-      if (!result.generated_query || !result.generated_question) {
-        throw new Error('Missing required fields in response');
-      }
-
-      console.log(`Successfully generated data for ${tableID}`);
-      return result;
-
-    } catch (parseError) {
-      console.error('Failed to parse response:', parseError.message);
-      console.error('Raw response:', content);
-      return null;
-    }
-  } catch (error) {
-    console.error(
-      `Error generating dataset for table ${tableID}, error type ${errorType}:`,
-      error.message
-    );
-    return null;
-  }
-};
-
-//function loading error types
+// Function to load classified errors
 const loadClassifiedErrors = async (filePath) => {
   try {
     const data = await fs.readFile(filePath, 'utf-8');
@@ -194,7 +83,6 @@ const loadClassifiedErrors = async (filePath) => {
   }
 };
 
-//function to save a generated dataset in output json
 const saveGeneratedData = async (data, outputPath) => {
   try {
     await fs.writeFile(outputPath, JSON.stringify(data, null, 2));
@@ -203,23 +91,250 @@ const saveGeneratedData = async (data, outputPath) => {
     console.error('Error writing generated data to file:', error.message);
   }
 };
+const generatePrompt = (schemaFormatted, goldenQuery, columnNames, tableNames) => {
+  return `
+    Given the following database schema:
 
-//this is the main function
+    \`\`\`plaintext
+    ${schemaFormatted}
+    \`\`\`
+
+    And the SQL query:
+    \`\`\`sql
+    ${goldenQuery}
+    \`\`\`
+
+    Tasks:
+    - Identify the table(s) the original query is referring to.
+    - List the column names used in the original query.
+    - Using the provided schema, find the most relevant different table in "${tableNames}" with corresponsing relevant columns "${columnNames}".
+    - Using identified table in "${tableNames}" and columns in "${columnNames}" generate three new queries.
+    - Preserve the intent and logic from original query. 
+    - For each of the three newly generated queries, provide three paraphrased versions.
+    - Write a new query using new table and columns.
+    - The rewritten query should maintain the original query intent and logic.
+    - Given paraphrased 3 questions for the generated query.
+
+    Provide your response in the following JSON format:
+
+    \`\`\`json
+        {
+      "queries": [
+        {
+          "generated_query": "First generated SQL query here",
+          "paraphrases": [
+            "Paraphrase of the first generated query",
+            "Another paraphrase of the first generated query",
+            "Another paraphrase of the first generated query"
+          ]
+        },
+        {
+          "generated_query": "Second generated SQL query here",
+          "paraphrases": [
+            "Paraphrase of the second generated query",
+            "Another paraphrase of the second generated query",
+            "Another paraphrase of the second generated query"
+          ]
+        },
+        {
+          "generated_query": "Third generated SQL query here",
+          "paraphrases": [
+            "Paraphrase of the third generated query",
+            "Another paraphrase of the third generated query",
+            "Another paraphrase of the third generated query"
+          ]
+        }
+      ]
+    }
+    \`\`\`
+  `;
+};
+
+const callOpenAI = async (prompt) => {
+  try {
+    const response = await axios.post(
+      url,
+      {
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'user',
+            content: prompt.trim(),
+          },
+        ],
+        max_tokens: 500,
+        temperature: 0.5, 
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+      }
+    );
+
+    return response.data.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('Error calling OpenAI API:', error.message);
+    return null;
+  }
+};
+
+
+const validateGeneratedQuery = (generatedQuery, columnNames) => {
+  // Regular expression to capture everything between SELECT and FROM
+  const selectMatch = generatedQuery.match(/SELECT\s+([\s\S]+?)\s+FROM/i);
+  if (!selectMatch) {
+    console.error('SELECT clause not found in the generated query.');
+    return false;
+  }
+
+  // Extract the columns part
+  const selectedColumnsPart = selectMatch[1];
+
+  // Split columns by comma, but handle commas within parentheses (e.g., functions)
+  const columns = [];
+  let current = '';
+  let parenthesisCount = 0;
+
+  for (const char of selectedColumnsPart) {
+    if (char === ',' && parenthesisCount === 0) {
+      columns.push(current.trim());
+      current = '';
+    } else {
+      if (char === '(') parenthesisCount++;
+      if (char === ')') parenthesisCount--;
+      current += char;
+    }
+  }
+  if (current.trim() !== '') {
+    columns.push(current.trim());
+  }
+
+  // Function to extract column names from expressions
+  const extractColumnName = (col) => {
+    // Remove alias if present
+    let [expression] = col.split(/\s+AS\s+/i);
+    expression = expression.trim();
+
+    // Match column names possibly wrapped in functions
+    // This regex matches functions like MIN(distance), MAX(some_column), etc.
+    const funcMatch = expression.match(/^[\w]+\(([^)]+)\)$/);
+    if (funcMatch) {
+      expression = funcMatch[1].trim();
+    }
+
+    // If there are nested functions, extract the innermost column
+    const nestedFuncMatch = expression.match(/^[\w]+\(([^)]+)\)$/);
+    if (nestedFuncMatch) {
+      expression = nestedFuncMatch[1].trim();
+    }
+
+    // Remove any table aliases (e.g., table.column)
+    if (expression.includes('.')) {
+      expression = expression.split('.').pop();
+    }
+
+    return expression.replace(/[`"]/g, ''); // Remove backticks or quotes
+  };
+
+  // Validate each column
+  for (const col of columns) {
+    const cleanCol = extractColumnName(col);
+
+    if (!columnNames.includes(cleanCol)) {
+      console.error(`Invalid column "${cleanCol}" found in the generated query.`);
+      return false;
+    }
+  }
+
+  console.log('Generated query is valid.');
+  return true;
+};
+
+const generateDataset = async (tableID, goldenQuery, schema) => {
+  try {
+    if (!Array.isArray(schema) || schema.length === 0) {
+      console.error(`Invalid schema provided for table ${tableID}`);
+      return null;
+    }
+
+    const columnNames = schema.map((col) => col.columnName);
+
+    const tableColumns = schema.reduce((acc, col) => {
+      if (!acc[col.tableName]) {
+        acc[col.tableName] = [];
+      }
+      acc[col.tableName].push(`${col.columnName} (${col.dataType})`);
+      return acc;
+    }, {});
+
+    const schemaFormatted = Object.entries(tableColumns)
+      .map(([tableName, columns]) => `${tableName}: ${columns.join(', ')}`)
+      .join('\n');
+
+    const prompt = generatePrompt(schemaFormatted, goldenQuery, columnNames);
+
+    const responseContent = await callOpenAI(prompt);
+
+    if (responseContent) {
+      try {
+        const jsonMatch = responseContent.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          throw new Error('No JSON object found in response');
+        }
+
+        const result = JSON.parse(jsonMatch[0]);
+
+        // Validate the new structure
+        if (!result.queries || !Array.isArray(result.queries)) {
+          throw new Error('Missing or invalid "queries" field in response');
+        }
+
+        // Validate each query and its paraphrases
+        result.queries.forEach((queryData, index) => {
+          if (!queryData.generated_query || !queryData.paraphrases) {
+            throw new Error(`Query at index ${index} is missing required fields`);
+          }
+          if (!Array.isArray(queryData.paraphrases) || queryData.paraphrases.length !== 3) {
+            throw new Error(`Paraphrases for query at index ${index} are missing or invalid`);
+          }
+        });
+
+        console.log(`Successfully generated data for table ${tableID}`);
+        return result;
+      } catch (parseError) {
+        console.error('Failed to parse response:', parseError.message);
+        console.error('Raw response:', responseContent);
+        return null;
+      }
+    } else {
+      console.warn(`Failed to generate data for table ${tableID}`);
+      return null;
+    }
+  } catch (error) {
+    console.error(
+      `Error generating dataset for table ${tableID}:`,
+      error.message
+    );
+    return null;
+  }
+};
 const main = async () => {
-  const errorsFilePath = path.join(__dirname, 'classified_errors.json');
+  const errorsFilePath = path.join(__dirname, 'classified_errors_with_questions.json');
   const outputFilePath = path.join(__dirname, 'generated_dataset.json');
 
   const classifiedErrors = await loadClassifiedErrors(errorsFilePath);
 
+  const limitedErrors = classifiedErrors.slice(0, 10);
+
   const generatedData = [];
 
-  for (const errorEntry of classifiedErrors) {
+  for (const errorEntry of limitedErrors) {
     const {
       example_number,
       table: tableID,
-      question: originalQuestion,
-      prediction: erroneousQuery,
-      errors_detected,
+      golden_query: goldenQuery,
     } = errorEntry;
 
     const schema = await parseSchema(tableID);
@@ -230,41 +345,35 @@ const main = async () => {
       continue;
     }
 
-    for (const errorType of errors_detected) {
-      console.log(`Processing example_number: ${example_number}, error_type: ${errorType}`);
+    const result = await generateDataset(
+      tableID, 
+      goldenQuery,
+      schema
+    );
 
-      const result = await generateDataset(
-        tableID, 
-        errorType, 
-        erroneousQuery, 
-        originalQuestion,
-        schema
-      );
+    if (result && Array.isArray(result.queries)) {
+      const processedResult = {
+        example_number,
+        table: tableID,
+        golden_query: goldenQuery,
+        generated_queries: result.queries.map((queryData) => ({
+          generated_query: queryData.generated_query,
+          paraphrases: queryData.paraphrases,
+        })),
+      };
 
-      if (result) {
-        generatedData.push({
-          example_number,
-          table: tableID,
-          error_type: errorType,
-          original_question: originalQuestion,
-          erroneous_query: erroneousQuery,
-          generated_query: result.generated_query,
-          generated_question: result.generated_question,
-        });
-        console.log(`Generated data for example_number: ${example_number}`);
-      } else {
-        console.warn(`Failed to generate data for example_number: ${example_number}`);
-      }
-
-      //some delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      generatedData.push(processedResult);
+      console.log(`Generated data for example_number: ${example_number}`);
+    } else {
+      console.warn(`Failed to generate data for example_number: ${example_number}, table: ${tableID}`);
     }
+
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   await saveGeneratedData(generatedData, outputFilePath);
 };
-
-//running the main function
 main().catch((error) => {
   console.error('An unexpected error occurred:', error.message);
 });
